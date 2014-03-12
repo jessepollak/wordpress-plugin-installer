@@ -20,25 +20,6 @@ class PluginInstaller
         return $this->slug . '/' . $this->slug . '.php';
     }
     
-    function admin_page_load() {
-        
-        // If they don't want to install, we can go away.  Doing this before the active check because it's lighter weight
-        if ( !isset( $_GET[ 'bruteprotect-clef-action' ] ) || $_GET[ 'bruteprotect-clef-action' ] !== 'install' ) 
-            return;
-        
-        // Clef is already active.  Yay!
-        if ( $this->clef_active() )
-            return;
-        
-        // Bad nonce
-        if ( !wp_verify_nonce( $_REQUEST[ '_wpnonce' ], 'bruteprotect-clef-install' ) )
-             wp_die( 'Unauthorized' );
-        
-        // Okay, let's install
-        $this->install_and_activate();
-        
-    }
-
     function url($base = false) {
         if (!$base) {
             $base = $_SERVER['REQUEST_URI'];
@@ -67,21 +48,6 @@ class PluginInstaller
 
         return false;
     }
-    
-    function display_settings() {
-        $url = wp_nonce_url(
-            add_query_arg(
-                array(
-                    'page'          => 'bruteprotect-clef',
-                    'bruteprotect-clef-action' => 'install',
-                ),
-                admin_url( 'admin.php' )
-            ),
-            'bruteprotect-clef-install'
-        );
-
-        include 'clef_settings.php';
-    }
 
     function install_and_activate() {
 
@@ -102,33 +68,6 @@ class PluginInstaller
                 return wp_redirect( 'plugins.php' );
             endif;
         endif;
-    }
-
-    function check_filesystem($url) {
-         /** Pass all necessary information via URL if WP_Filesystem is needed */
-        $url = wp_nonce_url(
-            add_query_arg(
-                array(
-                    'page' => 'bruteprotect-clef',
-                    'bruteprotect-clef-action' => 'install',
-                ),
-                admin_url( 'admin.php' )
-            ),
-            'bruteprotect-clef-install'
-        );
-        
-        $method = ''; // Leave blank so WP_Filesystem can populate it as necessary
-
-        if ( false === ( $creds = request_filesystem_credentials( $url, $method, false, false, null ) ) ) {
-            return false;
-        }
-
-        if ( ! WP_Filesystem( $creds ) ) {
-            request_filesystem_credentials( $url, $method, true, false, $fields ); // Setup WP_Filesystem
-            return false;
-        }
-
-        return true;
     }
     
     function install() {
